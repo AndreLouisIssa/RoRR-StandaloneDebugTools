@@ -1,0 +1,9 @@
+﻿{
+	"name": "StandaloneDebugTools",
+	"version_number": "1.0.0",
+	"website_url": "https://github.com/AndreLouisIssa/RoRR-StandaloneDebugTools",
+	"description": "Bundled a bunch of my tools for Risk of Rain Returns into one isolated module, consider this temporary ",
+	"dependencies": [
+		"ReturnOfModding-ReturnOfModding-1.0.0"
+	]
+}
