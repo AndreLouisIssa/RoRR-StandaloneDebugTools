@@ -3,6 +3,7 @@
 local old_meta_clones = {}
 local new_meta_to_old = {}
 local old_meta_to_new = {}
+local meta_level = 0
 
 local function dupmeta(obj)
 	local meta = debug.getmetatable(obj)
@@ -29,14 +30,22 @@ local function oldmeta(obj)
 end
 
 local function all_new_metas()
-	for meta, _meta in pairs(old_meta_to_new) do
-		util.merge(meta,_meta)
+	if meta_level == 0 then
+		for meta, _meta in pairs(old_meta_to_new) do
+			util.merge(meta,_meta)
+		end
 	end
+	meta_level = meta_level + 1
 end
 
 local function all_old_metas()
-	for meta, _meta in pairs(old_meta_clones) do
-		util.merge(meta,_meta)
+	if meta_level == 1 then
+		for meta, _meta in pairs(old_meta_clones) do
+			util.merge(meta,_meta)
+		end
+	end
+	if meta_level >= 1 then
+		meta_level = meta_level - 1
 	end
 end
 
@@ -59,6 +68,16 @@ local function ___len(o)
 	oldmeta(o)
 	return n
 end
+
+local eval_env = setmetatable({},{
+	__index = function(_,k)
+		local v = base[k]
+		if v ~= nil then v = _ENV[k] end
+		if v ~= nil then return v end
+		return _G[k]
+	end,
+	__newindex = _G
+})
 
 -- GLOBAL BASE EXTENSIONS
 
@@ -1465,7 +1484,7 @@ do
 	local function peval(text)
 		local func = load("return " .. text)
 		if not func then return nil end
-		setfenv(func,_G)
+		setfenv(func,eval_env)
 		all_new_metas()
 		local ret = table.pack(pcall(func))
 		all_old_metas()
@@ -2164,7 +2183,7 @@ local repl_environment = setmetatable({},{
 	__index = function(_,k)
 		local v = globals[k]
 		if v ~= nil then return v end
-		return _G[k]
+		return eval_env[k]
 	end,
 	__newindex = globals
 })
